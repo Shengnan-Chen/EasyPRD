@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # 请替换为你从 Render 获取的真实 URL
-API_URL = "https://my-prd-tool.onrender.com/generate_prd"
+API_URL = "https://easyprd.onrender.com/generate_prd"
 
 st.title("PRD 生成器 (网页版)")
 user_input = st.text_area("请输入你的需求", height=150)
