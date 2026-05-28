@@ -1,58 +1,48 @@
 from fastapi import FastAPI, Request
 import os
 import requests
-from pydantic import BaseModel
 
 app = FastAPI()
 
 # 确保在 Render 中配置了环境变量 API_KEY
 API_KEY = os.environ.get("API_KEY")
 
-# 定义数据模型
-class PrdRequest(BaseModel):
-    product_name: str
-    description: str
-
 @app.post("/generate_prd")
-def generate_prd(request: PrdRequest):  # 这里明确参数类型为 PrdRequest
-    return {"status": "success", "content": f"已收到: {request.product_name}"}
+async def generate_prd(request: Request):
+    if not API_KEY:
+        return {"status": "error", "message": "API Key 未在服务器配置"}
 
-# @app.post("/generate_prd")
-# async def generate_prd(request: Request):
-#     if not API_KEY:
-#         return {"status": "error", "message": "API Key 未在服务器配置"}
-
-#     try:
-#         data = await request.json()
-#         user_prompt = data.get("prompt", "")
+    try:
+        data = await request.json()
+        user_prompt = data.get("prompt", "")
         
-#         headers = {
-#             "Authorization": f"Bearer {API_KEY}",
-#             "Content-Type": "application/json"
-#         }
+        headers = {
+            "Authorization": f"Bearer {API_KEY}",
+            "Content-Type": "application/json"
+        }
         
-#         payload = {
-#             "model": "openai/gpt-3.5-turbo", 
-#             "messages": [
-#                 {"role": "system", "content": "你是一位专业的产品经理，请根据用户需求生成结构化、清晰的 PRD 文档。"},
-#                 {"role": "user", "content": user_prompt}
-#             ]
-#         }
+        payload = {
+            "model": "openai/gpt-3.5-turbo", 
+            "messages": [
+                {"role": "system", "content": "你是一位专业的产品经理，请根据用户需求生成结构化、清晰的 PRD 文档。"},
+                {"role": "user", "content": user_prompt}
+            ]
+        }
         
-#         response = requests.post(
-#             "https://openrouter.ai/api/v1/chat/completions",
-#             headers=headers,
-#             json=payload
-#         )
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers=headers,
+            json=payload
+        )
         
-#         if response.status_code != 200:
-#             return {"status": "error", "message": f"OpenRouter 错误: {response.text}"}
+        if response.status_code != 200:
+            return {"status": "error", "message": f"OpenRouter 错误: {response.text}"}
             
-#         result = response.json()
-#         # 提取 AI 的回答内容
-#         prd_content = result.get("choices", [{}])[0].get("message", {}).get("content", "未能生成 PRD")
+        result = response.json()
+        # 提取 AI 的回答内容
+        prd_content = result.get("choices", [{}])[0].get("message", {}).get("content", "未能生成 PRD")
         
-#         return {"status": "success", "prd_content": prd_content}
+        return {"status": "success", "prd_content": prd_content}
 
-#     except Exception as e:
-#         return {"status": "error", "message": str(e)}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
